@@ -1,7 +1,11 @@
 
 # About the project
 
-*Write a short description about the course and add a link to your GitHub repository here. This is an R Markdown (.Rmd) file so you should use R Markdown syntax.*
+I first saw this course listed in the transferable skills course list for my doctoral program. The course looked interesting and useful, so I decided to register.
+
+As I have no previous experience in R, RStudio or GitHub, I'm looking forward to first learning to use these tools properly. Then, I expect to use the tools to do data analysis and visualization, as well as to learn more about open data and open science.
+
+My GitHub repository is at: https://github.com/sr-hel/IODS-project
 
 ```{r}
 # This is a so-called "R chunk" where you can write R code.
