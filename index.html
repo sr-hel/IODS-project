@@ -742,8 +742,8 @@ loss_func(class = alc$high_use, prob = alc$probability)</code></pre>
 <pre class="r"><code>library(boot)
 cv &lt;- cv.glm(data = alc, cost = loss_func, glmfit = m, K = 10)
 cv$delta[1]</code></pre>
-<pre><code>## [1] 0.3089005</code></pre>
-<p>We perform 10-fold cross-validation of our model, and find a mean prediction error of about 0.31. This performance of this model is clearly worse than the model considered in the DataCamp tutorial.</p>
+<pre><code>## [1] 0.3219895</code></pre>
+<p>We perform 10-fold cross-validation of our model, and find a mean prediction error of &gt; 0.30. The performance of this model is therefore clearly worse than the model considered in the DataCamp tutorial with error 0.26.</p>
 </div>
 </div>
 
