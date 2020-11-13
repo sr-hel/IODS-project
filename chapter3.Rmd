@@ -93,6 +93,8 @@ The logistic regression model agrees with our hypothesis for the variables study
 
 ### Predictions
 
+We drop the internet variable, and look at the predictive performance of our model with the remaining three explanatory variables.
+
 ```{r}
 m <- glm(high_use ~ studytime + famrel + G3, data = alc, family = "binomial")
 probabilities <- predict(m, type = "response")
@@ -125,4 +127,4 @@ cv <- cv.glm(data = alc, cost = loss_func, glmfit = m, K = 10)
 cv$delta[1]
 ```
 
-We perform 10-fold cross-validation of our model, and find a mean prediction error of about 0.3193. This performance of this model is clearly worse than the model considered in the DataCamp tutorial. 
+We perform 10-fold cross-validation of our model, and find a mean prediction error of about 0.31. This performance of this model is clearly worse than the model considered in the DataCamp tutorial. 
