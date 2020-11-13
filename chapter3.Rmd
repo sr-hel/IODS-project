@@ -1,0 +1,128 @@
+# Logistic regression
+
+### The dataset
+
+We begin by reading in the alc data set:
+
+```{r}
+alc <- read.csv("data/alc.csv")
+colnames(alc)
+```
+
+This is a joined data set, combining student data from two Portuguese schools. 
+The data set describes school performance in mathematics and Portuguese language,
+but it also contains information regarding student background, activities and social factors. Of particular interest to us are the alc_use and high_use 
+variables, which describe student alcohol consumption.
+
+In this analysis, we study the relationships between alcohol consumption and the following four variables: G3, famrel, internet and studytime. G3 is the final year school grade, famrel describes family relationships, internet stands for internet access at home, and studytime is the student's weekly study time.
+
+Before looking at the data, we would expect high alcohol consumption to correlate with lower final year grades, worse family relationships, no internet access at home, and less weekly study time.
+
+We will now load in the necessary libraries and then we'll go through the relationships between the variables one by one.
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+```
+
+### Final year grades
+
+We begin with the final year grades, G3. Below, we have plotted the distribution of final year grades and the relationship between the grades and alcohol consumption. We have also listed mean grades for the low/high alcohol consumption groups.
+
+```{r}
+g1 <- ggplot(data = alc, aes(x = G3))
+g2 <- ggplot(alc, aes(x = high_use, y = G3))
+grid.arrange(g1 + geom_bar(), g2 + geom_boxplot(), nrow=1, ncol=2)
+alc %>% group_by(high_use) %>% summarise(count = n(), mean_grade = mean(G3))
+```
+
+We see that the distribution of grades in the data set leans towards the upper half of the range. We also see that our hypothesis regarding grades appears to be correct: the mean final year grade is about a point lower for the high alcohol consumption group.
+
+### Family relationships
+
+```{r}
+g1 <- ggplot(data = alc, aes(x = famrel))
+g2 <- ggplot(alc, aes(x = high_use, y = famrel))
+grid.arrange(g1 + geom_bar(), g2 + geom_boxplot(), nrow=1, ncol=2)
+alc %>% group_by(high_use) %>% summarise(count = n(), mean_rel = mean(famrel))
+```
+
+Family relationships in the data set appear to be very good on average, with the distribution leaning heavily towards the top end. Again, the data seems to agree with our hypothesis: students in the high alcohol consumption group have 0.22 points lower family relationship scores on average.
+
+### Internet access
+
+```{r}
+alc$internet <- ifelse(alc$internet == "yes", TRUE, FALSE)
+g1 <- ggplot(data = alc, aes(x = internet))
+g2 <- ggplot(alc, aes(x = high_use, y = internet))
+grid.arrange(g1 + geom_bar(), g2 + geom_boxplot(), nrow=1, ncol=2)
+alc %>% group_by(high_use) %>% summarise(count = n(), mean_int = mean(internet))
+```
+
+The vast majority of students have internet access at home. Unlike for the two previous variables, our hypothesis appears to have been incorrect: the average number of students with internet access was higher in the high alcohol consumption group. The statistical significance also appears to be fairly small.
+
+### Study time
+
+```{r}
+g1 <- ggplot(data = alc, aes(x = studytime))
+g2 <- ggplot(alc, aes(x = high_use, y = studytime))
+grid.arrange(g1 + geom_bar(), g2 + geom_boxplot(), nrow=1, ncol=2)
+alc %>% group_by(high_use) %>% summarise(count = n(), mean_time = mean(studytime))
+```
+
+The weekly study times in the data set lean heavily towards the lower end of the range. We also see that our final hypothesis agrees with the data: the average study time score for the high alcohol consumption group is 0.38 points lower than for the low alcohol consumption group.
+
+### Logistic regression model
+
+```{r}
+m <- glm(high_use ~ G3 + famrel + internet + studytime, data = alc, family = "binomial")
+summary(m)
+OR <- coef(m) %>% exp
+CI <- confint(m) %>% exp
+cbind(OR, CI)
+```
+
+Above, we have listed a summary of our logistic regression model, the coefficients of the model as odd ratios and their confidence intervals. 
+
+From the p-values of the summary we can see that out of all the variables we considered, study time has by far the most significant statistical relationship with alcohol consumption. Family relationships also have some statistical significance, final year grades have very little, and internet access has none. The estimated coefficients are negative for the three variables of significance, which tells us that when study scores, family relations or study time goes down, the prediction for high alcohol consumption goes up.
+
+We can see this also in the odd ratios. We note that the odd ratios for the variables studytime, famrel and G3 are less than zero. This means that they are negatively associated with alcohol consumption, i.e. the odds of high alcohol consumption become lower when the explanatory variable goes through a positive unit change.
+
+The logistic regression model agrees with our hypothesis for the variables studytime, famrel and G3, but disagrees with our hypothesis for the variable internet, which turned out to be statistically insignificant.
+
+### Predictions
+
+```{r}
+m <- glm(high_use ~ studytime + famrel + G3, data = alc, family = "binomial")
+probabilities <- predict(m, type = "response")
+alc <- mutate(alc, probability = probabilities)
+alc <- mutate(alc, prediction = probability > 0.5)
+g <- ggplot(alc, aes(x = probability, y = high_use, col = prediction))
+g + geom_point()
+table(high_use = alc$high_use, prediction = alc$prediction)
+```
+
+We see that our model does a decent job of predicting when there is no high alcohol consumption (with only 13 false positives), but it has issues recognizing when there is (it missed 107 cases). We can also consider the training error:
+
+```{r}
+loss_func <- function(class, prob) {
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+loss_func(class = alc$high_use, prob = alc$probability)
+loss_func(class = alc$high_use, prob = 0)
+loss_func(class = alc$high_use, prob = 1)
+```
+
+Above, we have computed the total proportion of inaccurately classified observations for our model, as well as the corresponding proportions for two simple guesses: always assuming that there is no high alcohol consumption, and always assuming that there is. In this case, the simple guessing strategy that there is no high alcohol consumption has slightly less error (0.2984) than our model (0.3141). The other guessing strategy of always assuming high alcohol consumption yields much worse results at 0.7015.
+
+### Bonus: Cross-validation
+
+```{r}
+library(boot)
+cv <- cv.glm(data = alc, cost = loss_func, glmfit = m, K = 10)
+cv$delta[1]
+```
+
+We perform 10-fold cross-validation of our model, and find a mean prediction error of about 0.3193. This performance of this model is clearly worse than the model considered in the DataCamp tutorial. 

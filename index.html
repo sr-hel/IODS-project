@@ -438,6 +438,7 @@ summary {
 <li><a href="#introduction-to-open-data-science---course-project">Introduction to Open Data Science - Course Project</a></li>
 <li><a href="#about-the-project">About the project</a></li>
 <li><a href="#regression-and-model-validation">Regression and model validation</a></li>
+<li><a href="#logistic-regression">Logistic regression</a></li>
 </ul>
 </div>
 
@@ -564,7 +565,22 @@ plot(model, which = c(1, 2, 5))</code></pre>
 <p>The Residuals vs Fitted plot tells us how well our fit matches the assumption of constant variance of errors. Given that the plot does not show any particular patterns, our fit agrees with this assumption as well.</p>
 <p>Finally, the Residuals vs Leverage plot tells us whether a single observation has an unusually large impact on our model. Since no points stand out in the plot, and the maximum values of leverage are fairly small (&lt; 0.05), our fit has no such issues.</p>
 <hr />
-<p>(more chapters to be added similarly as we proceed with the course!)</p>
+</div>
+</div>
+<div id="logistic-regression" class="section level1">
+<h1>Logistic regression</h1>
+<div id="the-dataset-1" class="section level3">
+<h3>The dataset</h3>
+<p>We begin by reading in the alc data set:</p>
+<pre class="r"><code>alc &lt;- read.csv(&quot;data/alc.csv&quot;)
+colnames(alc)</code></pre>
+<pre><code>##  [1] &quot;school&quot;     &quot;sex&quot;        &quot;age&quot;        &quot;address&quot;    &quot;famsize&quot;   
+##  [6] &quot;Pstatus&quot;    &quot;Medu&quot;       &quot;Fedu&quot;       &quot;Mjob&quot;       &quot;Fjob&quot;      
+## [11] &quot;reason&quot;     &quot;nursery&quot;    &quot;internet&quot;   &quot;guardian&quot;   &quot;traveltime&quot;
+## [16] &quot;studytime&quot;  &quot;failures&quot;   &quot;schoolsup&quot;  &quot;famsup&quot;     &quot;paid&quot;      
+## [21] &quot;activities&quot; &quot;higher&quot;     &quot;romantic&quot;   &quot;famrel&quot;     &quot;freetime&quot;  
+## [26] &quot;goout&quot;      &quot;Dalc&quot;       &quot;Walc&quot;       &quot;health&quot;     &quot;absences&quot;  
+## [31] &quot;G1&quot;         &quot;G2&quot;         &quot;G3&quot;         &quot;alc_use&quot;    &quot;high_use&quot;</code></pre>
 </div>
 </div>
 
