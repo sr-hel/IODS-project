@@ -1,0 +1,120 @@
+# Clustering and classification
+
+### The dataset
+
+We begin by reading in the Boston data set from the MASS package:
+
+```{r}
+library(MASS)
+data("Boston")
+
+dim(Boston)
+str(Boston)
+```
+
+The Boston data set consists of data relevant to housing values in the suburbs of Boston. It includes variables such as crime rate, accessibility to radial highways and property tax rate. The data set has 506 observations of 14 variables. Let us look at the variables in more detail:
+
+```{r}
+library(dplyr)
+library(corrplot)
+pairs(Boston)
+cor_matrix <- cor(Boston) %>% round(digits = 2)
+corrplot(cor_matrix, method="circle", type="upper", cl.pos="b", tl.pos="d", tl.cex=0.6)
+summary(Boston)
+```
+
+From the summary we can see that some of the variables have a large variance in their distribution, for example the variable crim has a median of 0.25 and mean of 3.61, but the maximum observation is 88.97. Similarly, the variable zn has a median of 0.0 and a mean of 11.36, but the maximum observation is 100.0.
+
+From the correlation plot we see that the following variable pairs appear to have the strongest positive correlations between them: rad and tax, nox and indus, age and nox, tax and indus, medv and rm. The following variable pairs have the strongest negative correlations between them: dis and nox, dis and age, medv and lstat, dis and indus, lstat and rm.
+
+Let us next standardize the data set.
+
+```{r}
+boston_scaled <- scale(Boston)
+summary(boston_scaled)
+```
+
+As seen from the above summary, we have scaled all the variables such that their means are zero. We now create a categorical variable of the crime rate and divide the data set into train and test sets, so that 80% of all data belongs to the train set:
+
+```{r}
+boston_scaled <- as.data.frame(boston_scaled)
+
+bins <- quantile(boston_scaled$crim)
+crime <- cut(boston_scaled$crim, breaks = bins, include.lowest = TRUE, label = c("low", "med_low", "med_high", "high"))
+boston_scaled <- dplyr::select(boston_scaled, -crim)
+boston_scaled <- data.frame(boston_scaled, crime)
+
+n <- nrow(boston_scaled)
+ind <- sample(n,  size = n * 0.8)
+train <- boston_scaled[ind,]
+test <- boston_scaled[-ind,]
+```
+
+### Linear discriminant analysis
+
+With the data in order, we can now fit a linear discriminant analysis on our newly created train set and plot it:
+
+```{r}
+lda.fit <- lda(crime ~ ., data = train)
+lda.fit
+
+lda.arrows <- function(x, myscale = 1, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1,2)){
+  heads <- coef(x)
+  arrows(x0 = 0, y0 = 0, 
+         x1 = myscale * heads[,choices[1]], 
+         y1 = myscale * heads[,choices[2]], col=color, length = arrow_heads)
+  text(myscale * heads[,choices], labels = row.names(heads), 
+       cex = tex, col=color, pos=3)
+}
+
+classes <- as.numeric(train$crime)
+plot(lda.fit, dimen = 2, col = classes, pch = classes)
+lda.arrows(lda.fit, myscale = 1)
+```
+
+From the relative length of the arrows in the plot it is apparent that the variable rad has by far the largest impact on the class grouping.
+
+We can now use our linear discriminant analysis fit to predict the classes on the test data. Since we know the correct classes, we can compare to results to see how accurate our prediction is:
+
+```{r}
+correct_classes <- test$crime
+test <- dplyr::select(test, -crime)
+lda.pred <- predict(lda.fit, newdata = test)
+table(correct = correct_classes, predicted = lda.pred$class)
+```
+
+The predictions of our LDA model appear to be very good for the "high" class and passable for the "med_low" and "low" classes on average. For the "med_high" class, our model sometimes seems to have trouble separating between "med_high" and "med_low".
+
+### K-means clustering
+
+Finally, let us consider K-means clustering. We reload the data set and scale it again. We calculate the distances between observations and run the K-means algorithm with the number of clusters fixed to three, initially:
+
+```{r}
+data('Boston')
+boston_scaled <- scale(Boston)
+
+dist_eu <- dist(Boston)
+km <- kmeans(Boston, centers = 3)
+pairs(Boston, col = km$cluster)
+```
+
+For three clusters, we see that the clusters are best separated by the variable tax, although even then there is some mixing with the red and green clusters.
+
+Let us then try to figure out the optimal number of clusters by looking at the within cluster sum of squares (WCSS), to see how the results change for a different number of clusters.
+
+```{r}
+library(ggplot2)
+set.seed(123)
+k_max <- 10
+twcss <- sapply(1:k_max, function(k){kmeans(Boston, k)$tot.withinss})
+qplot(x = 1:k_max, y = twcss, geom = 'line')
+```
+
+Since the value of total WCSS drops radically for two clusters, this seems like the optimal value. We run the K-means algorithm again for two clusters:
+
+```{r}
+km <-kmeans(Boston, centers = 2)
+pairs(Boston, col = km$cluster)
+```
+
+In this plot, the two clusters appear to be most clearly separated for the variables rad and tax, thus these must be the strongest separators for the clusters. This means that the suburbs of Boston can be nicely grouped based on accessibility to radial highways and full-value property-tax rate.
