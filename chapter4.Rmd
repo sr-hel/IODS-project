@@ -34,7 +34,7 @@ boston_scaled <- scale(Boston)
 summary(boston_scaled)
 ```
 
-As seen from the above summary, we have scaled all the variables such that their means are zero. We now create a categorical variable of the crime rate and divide the data set into train and test sets, so that 80% of all data belongs to the train set:
+As seen from the above summary, we have scaled all the variables such that their means are zero. We now create a categorical variable of the crime rate by using the quantiles as the break points. We also divide the data set into train and test sets, so that 80% of all data belongs to the train set:
 
 ```{r}
 boston_scaled <- as.data.frame(boston_scaled)
@@ -72,9 +72,9 @@ plot(lda.fit, dimen = 2, col = classes, pch = classes)
 lda.arrows(lda.fit, myscale = 1)
 ```
 
-From the relative length of the arrows in the plot it is apparent that the variable rad has by far the largest impact on the class grouping.
+From the relative length of the arrows in the plot it is apparent that the variable rad has by far the largest impact on the class grouping. From the "proportion of trace" listing we also see that the LD1 discriminant (represented by the x-axis in the plot) explains about 95% of the variance between the groups.
 
-We can now use our linear discriminant analysis fit to predict the classes on the test data. Since we know the correct classes, we can compare to results to see how accurate our prediction is:
+We can now use our linear discriminant analysis fit to predict the crime classes on the test data. Since we know the correct classes, we can compare the results to see how accurate our prediction is:
 
 ```{r}
 correct_classes <- test$crime
@@ -83,11 +83,11 @@ lda.pred <- predict(lda.fit, newdata = test)
 table(correct = correct_classes, predicted = lda.pred$class)
 ```
 
-The predictions of our LDA model appear to be very good for the "high" class and passable for the "med_low" and "low" classes on average. For the "med_high" class, our model sometimes seems to have trouble separating between "med_high" and "med_low".
+The predictions of our LDA model appear to be very good for the "high" class and passable for the "med_low" and "low" classes on average. For the "med_high" class, our model sometimes seems to have trouble separating between "med_high" and "med_low". In conclusion, our model can accurately predict whether the crime rate of the suburb is in the "high" category.
 
 ### K-means clustering
 
-Finally, let us consider K-means clustering. We reload the data set and scale it again. We calculate the distances between observations and run the K-means algorithm with the number of clusters fixed to three, initially:
+Finally, let us consider K-means clustering. We reload the data set and scale it again. We calculate the Euclidean distances between observations and run the K-means algorithm with the number of clusters fixed to three, initially:
 
 ```{r}
 data('Boston')
@@ -98,9 +98,9 @@ km <- kmeans(Boston, centers = 3)
 pairs(Boston, col = km$cluster)
 ```
 
-For three clusters, we see that the clusters are best separated by the variable tax, although even then there is some mixing with the red and green clusters.
+For three clusters, we see that the clusters are best separated by the variable tax, although even then there is some mixing between the red and green clusters.
 
-Let us then try to figure out the optimal number of clusters by looking at the within cluster sum of squares (WCSS), to see how the results change for a different number of clusters.
+Let us try to figure out the optimal number of clusters by looking at the within cluster sum of squares (WCSS). We calculate the values of total WCSS for 1-10 clusters and plot the results:
 
 ```{r}
 library(ggplot2)

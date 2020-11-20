@@ -46,7 +46,7 @@ colnames(gii)[10] <- "labm"
 gii <- mutate(gii, edu2r = edu2f/edu2m)
 gii <- mutate(gii, labr = labf/labm)
 
-# We join the data sets and keep only the students present in both data sets.
+# We join the data sets and keep only the countries present in both data sets.
 
 library(dplyr)
 
