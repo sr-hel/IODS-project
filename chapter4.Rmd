@@ -93,12 +93,12 @@ Finally, let us consider K-means clustering. We reload the data set and scale it
 data('Boston')
 boston_scaled <- scale(Boston)
 
-dist_eu <- dist(Boston)
-km <- kmeans(Boston, centers = 3)
-pairs(Boston, col = km$cluster)
+dist_eu <- dist(boston_scaled)
+km <- kmeans(boston_scaled, centers = 3)
+pairs(boston_scaled, col = km$cluster)
 ```
 
-For three clusters, we see that the clusters are best separated by the variable tax, although even then there is some mixing between the red and green clusters.
+For three clusters, there does not appear to be any variables that would cleanly separate the different clusters from each other.
 
 Let us try to figure out the optimal number of clusters by looking at the within cluster sum of squares (WCSS). We calculate the values of total WCSS for 1-10 clusters and plot the results:
 
@@ -106,15 +106,15 @@ Let us try to figure out the optimal number of clusters by looking at the within
 library(ggplot2)
 set.seed(123)
 k_max <- 10
-twcss <- sapply(1:k_max, function(k){kmeans(Boston, k)$tot.withinss})
+twcss <- sapply(1:k_max, function(k){kmeans(boston_scaled, k)$tot.withinss})
 qplot(x = 1:k_max, y = twcss, geom = 'line')
 ```
 
 Since the value of total WCSS drops radically for two clusters, this seems like the optimal value. We run the K-means algorithm again for two clusters:
 
 ```{r}
-km <-kmeans(Boston, centers = 2)
-pairs(Boston, col = km$cluster)
+km <- kmeans(boston_scaled, centers = 2)
+pairs(boston_scaled, col = km$cluster)
 ```
 
 In this plot, the two clusters appear to be most clearly separated for the variables rad and tax, thus these must be the strongest separators for the clusters. This means that the suburbs of Boston can be nicely grouped based on accessibility to radial highways and full-value property-tax rate.
