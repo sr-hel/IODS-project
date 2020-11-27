@@ -1,0 +1,89 @@
+# Dimensionality reduction techniques
+
+### The dataset
+
+We begin by reading in the human data set:
+
+```{r}
+library(GGally)
+library(dplyr)
+
+human <- read.csv("data/human.csv", row.names = 1)
+ggpairs(human)
+summary(human)
+```
+
+The distributions for all the variables appear to have a strong peak, with some
+variables peaking at the very low end of the range (GNI, mort, birth). There are 
+also clear correlations between the variables. In particular, there are strong 
+positive correlations between the following variable pairs: lifeexp and eduexp, birth and mort, GNI and lifeexp, GNI and eduexp. There are strong negative correlations between the following variable pairs: mort and lifeexp, mort and eduexp, birth and lifeexp, birth and eduexp, mort and edu2r.
+
+### Principal component analysis
+
+#### Non-standardized data
+
+We first perform principal component analysis on the non-standardized human data:
+
+```{r}
+pca_human <- prcomp(human)
+s <- summary(pca_human)
+s
+pca_pr <- round(100*s$importance[2, ], digits = 1)
+pc_lab <- paste0(names(pca_pr), " (", pca_pr, "%)")
+biplot(pca_human, cex = c(0.8, 1), col = c("grey40", "deeppink2"), xlab = pc_lab[1], ylab = pc_lab[2])
+```
+
+Since we have not scaled (standardized) our data, the variable with the largest standard deviation dominates. The standard deviation is represented by the length of the arrow, and in this case we see that it is GNI that dominates over all the other variables. It follows that our first principle component PC1 is strongly correlated with GNI, and in fact 100% of the variation in the data is explained by the first principle component. This means that the analysis has essentially reduced the dimension of the data set to one. This is not necessarily accurate, so let us repeat the analysis by first standardizing the data:
+
+#### Standardized data
+
+```{r}
+human_std <- scale(human)
+pca_human <- prcomp(human_std)
+s <- summary(pca_human)
+s
+pca_pr <- round(100*s$importance[2, ], digits = 1)
+pc_lab <- paste0(names(pca_pr), " (", pca_pr, "%)")
+biplot(pca_human, cex = c(0.8, 1), col = c("grey40", "deeppink2"), xlab = pc_lab[1], ylab = pc_lab[2])
+```
+
+We see that now the variables mort, birth, eduexp, lifeexp, GNI and edu2r are correlated with the first principal component PC1, which captures about 54% of the variability of the data. Orthogonal to this component is the second principal component PC2, correlated with the labr and parli variables and explaining about 16% of the variability. Together they explain about 70% of the variability of the data set. Here we have a two-dimensional reduction of our data set where all the original variables have a comparable contribution (standard deviation).
+
+To recap, the difference between the two results is due to the fact that principal component analysis assumes the features with larger variance to be more important than the features with smaller variance. In the non-standardized case, GNI dominates over all the other variables as the only important one. In the (scaled) standardized case, the other variables are properly represented as well.
+
+Our interpretation is that these country-based human development indices can be effectively reduced to two dimensions: the first principal component dimension PC1 describes health, knowledge and standard of living. The second principal component dimension PC2 describes the proportion of females in the labour force and in decision-making positions. According to the principal component analysis, these two aspects (PC1 and PC2) are orthogonal, i.e. not correlated.
+
+### Multiple correspondence analysis
+
+Let us consider another data set, this one related to tea consumption:
+
+```{r}
+library(FactoMineR)
+library(tidyr)
+data(tea)
+
+dim(tea)
+str(tea)
+
+keep_columns <- c("Tea", "How", "how", "sugar", "where", "lunch")
+tea_time <- dplyr::select(tea, one_of(keep_columns))
+gather(tea_time) %>% ggplot(aes(value)) + geom_bar() + facet_wrap("key", scales = "free") + theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+```
+
+We have 300 observations of 36 variables describing how, where and when people are consuming tea. Since there are so many variables, we have chosen to limit our analysis to just a handful of them, shown in the plot above. We will now perform multiple correspondence analysis on these variables:
+
+```{r}
+mca <- MCA(tea_time, graph = FALSE)
+summary(mca)
+plot(mca, invisible=c("ind"), habillage = "quali")
+```
+
+First, we note that the first two dimensions of the multiple correspondence analysis explain about 15% and 14% of the variance in the data set, respectively. From the variance table we see that in fact 6 dimensions are required to explain about 70% of the variability.
+
+We can see some interesting groupings in the plot. For example, we see that tea bags and buying tea from a chain store are next to each other, i.e. these things are connected. On the other hand, unpackaged tea and tea shops are also close to each other. It makes sense that people go to specialist tea shops for loose leaf tea. We can also see that Earl Grey tea is closely associated with both milk and sugar use, whereas regular black tea is more closely associated with no sugar.
+
+
+
+
+
+

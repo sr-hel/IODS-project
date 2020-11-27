@@ -1,6 +1,8 @@
-# Sami Raatikainen / 20.11.2020
-# Introduction to Open Data Science / Exercise 4
+# Sami Raatikainen / 26.11.2020
+# Introduction to Open Data Science / Exercise 5
 # Data source reference: http://hdr.undp.org/en/content/human-development-index-hdi
+
+# Exercise 4
 
 # We read in the data and explore its dimensions and structure.
 
@@ -21,34 +23,17 @@ summary(gii)
 
 # We rename the variables with shorter descriptive names
 
-colnames(hd)[1] <- "HDIrank"
-colnames(hd)[2] <- "country"
-colnames(hd)[3] <- "HDI"
-colnames(hd)[4] <- "lifeexp"
-colnames(hd)[5] <- "eduexp"
-colnames(hd)[6] <- "edumean"
-colnames(hd)[7] <- "GNI"
-colnames(hd)[8] <- "GNIHDI"
-
-colnames(gii)[1] <- "GIIrank"
-colnames(gii)[2] <- "country"
-colnames(gii)[3] <- "GII"
-colnames(gii)[4] <- "mort"
-colnames(gii)[5] <- "birth"
-colnames(gii)[6] <- "parli"
-colnames(gii)[7] <- "edu2f"
-colnames(gii)[8] <- "edu2m"
-colnames(gii)[9] <- "labf"
-colnames(gii)[10] <- "labm"
+colnames(hd) <- c("HDIrank", "country", "HDI", "lifeexp", "eduexp", "edumean", "GNI", "GNIHDI")
+colnames(gii) <- c("GIIrank", "country", "GII", "mort", "birth", "parli", "edu2f", "edu2m", "labf", "labm")
 
 # Create two new ratio variables in gii
+
+library(dplyr)
 
 gii <- mutate(gii, edu2r = edu2f/edu2m)
 gii <- mutate(gii, labr = labf/labm)
 
 # We join the data sets and keep only the countries present in both data sets.
-
-library(dplyr)
 
 human <- inner_join(hd, gii, by = "country")
 
@@ -60,3 +45,46 @@ str(human)
 # We store the data set.
 
 write.csv(human, file = "data/human.csv", row.names = FALSE)
+
+# Exercise 5
+
+# We read in the data and explore its dimensions and structure.
+
+human <- read.csv("data/human.csv")
+
+dim(human)
+str(human)
+
+# The human data set consists of 195 observations of 19 variables. The variables
+# are related to Human Development Index (HDI) and Gender Inequality Index (GII).
+
+# We transform the GNI variable to numeric
+
+library(stringr)
+
+human <- mutate(human, GNI = str_replace(human$GNI, pattern=",", replace ="") %>% as.numeric())
+
+# Exclude unneeded variables
+
+keep <- c("country", "edu2r", "labr", "eduexp", "lifeexp", "GNI", "mort", "birth", "parli")
+human <- select(human, one_of(keep))
+
+# Remove all rows with missing values
+
+human <- filter(human, complete.cases(human) == TRUE)
+
+# Remove observations which relate to regions instead of countries
+
+last <- nrow(human) - 7
+human <- human[1:last, ]
+
+# Define the row names of the data by the country names 
+
+rownames(human) <- human$country
+human <- select(human, -country)
+
+# The data set has 155 observations of 8 variables, as expected.
+
+# We store the data set
+
+write.csv(human, file = "data/human.csv")
