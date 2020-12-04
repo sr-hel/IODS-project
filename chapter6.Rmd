@@ -24,7 +24,6 @@ library(ggplot2)
 ggplot(RATSL, aes(x = Time, y = Weight, group = ID)) +
   geom_line() +
   facet_grid(. ~ Group, labeller = label_both) +
-  # theme(legend.position = "none") + 
   scale_y_continuous(limits = c(min(RATSL$Weight), max(RATSL$Weight)))
 ```
 
@@ -69,7 +68,7 @@ ggplot(RATSS, aes(x = Time, y = mean, linetype = Group, shape = Group)) +
 
 From the mean response profile plot we can tell that the groups are clearly different from one another, because the standard errors do not overlap. We can also see what we already noted on earlier: the mean weights of each group increase during the study, and the rats in Group 2 appear to be gaining weight faster than the rats in Group 3, since the corresponding lines in the plot are getting closer to each other with time.
 
-Boxplots:
+Let us then consider the mean summary measure. 
 
 ```{r}
 RATSL8S <- RATSL %>%
@@ -84,8 +83,7 @@ ggplot(RATSL8S, aes(x = Group, y = mean)) +
   scale_y_continuous(name = "mean(Weight), weeks 2-9")
 ```
 
-Boxplot without outliers:
-
+There appears to be more variability in Group 2, which is understandable due to the heavy outlier we noted on earlier, seen here as a black dot at a weight of almost 600 grams. We also see some less drastic outliers in the other groups. Since these outliers may bias our analysis, we'll filter them out:
 
 ```{r}
 RATSL8S1 <- RATSL8S %>%
@@ -97,7 +95,7 @@ ggplot(RATSL8S1, aes(x = Group, y = mean)) +
   scale_y_continuous(name = "mean(Weight), weeks 2-9")
 ```
 
-Test:
+We have no more outliers. We can see some more variability with Groups 1 and 2 when compared to Group 3, but we'd like to perform a formal test to be sure. Let us do exactly that. We'll consider the observations of day 1 as a baseline in what follows.
 
 ```{r}
 RATS <- read.table("https://raw.githubusercontent.com/KimmoVehkalahti/MABS/master/Examples/data/rats.txt", sep="", header=TRUE)
@@ -106,6 +104,7 @@ RATSL8S2 <- RATSL8S %>%
   mutate(baseline = RATS$WD1)
 
 fit <- lm(mean ~ baseline + Group, data = RATSL8S2)
+summary(fit)
 
 anova(fit)
 ```
