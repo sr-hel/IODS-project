@@ -109,6 +109,8 @@ summary(fit)
 anova(fit)
 ```
 
+By looking at the p-values, we can see that the initial weights, i.e. the baseline, has a strong correlation with the mean summary measure. This makes sense. But we can also see that the Group variable has a p-value of 0.07586, which implies that the choice of group actually has no real statistical significance on the mean.
+
 ### The BPRS dataset
 
 We read in the BPRS data set:
