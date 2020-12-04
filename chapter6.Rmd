@@ -12,6 +12,7 @@ RATSL$Group <- factor(RATSL$Group)
 dim(RATSL)
 str(RATSL)
 ```
+
 The RATS data set consists of 176 observations of 5 variables (of longitudinal data). The data is from a study on the weight gain of three groups of rats (16 rats total) on different diets over a period of 64 days.
 
 We plot the weight developments of the rat groups as follows:
@@ -113,22 +114,33 @@ By looking at the p-values, we can see that the initial weights, i.e. the baseli
 
 ### The BPRS dataset
 
-We read in the BPRS data set:
+Let us consider the BPRS data set next. We read in the data:
 
 ```{r}
 BPRSL <- read.csv("data/BPRSL.csv", row.names = 1)
+BPRSL$subject <- BPRSL$subject + 20*(BPRSL$treatment == 2)
 BPRSL$treatment <- factor(BPRSL$treatment)
 BPRSL$subject <- factor(BPRSL$subject)
 
-ggplot(BPRSL, aes(x = week, y = bprs, linetype = subject)) +
+dim(BPRSL)
+str(BPRSL)
+```
+
+The BPRS data set consists of 176 observations of 6 variables (of longitudinal data). The data records the brief psychiatric rating scale (bprs) measured from 40 male subjects divided into two treatment groups, over a period of 8 weeks.
+
+We plot the psychiatric rating over the treatment period as follows:
+
+```{r}
+ggplot(BPRSL, aes(x = week, y = bprs, group = subject)) +
   geom_line() +
-  scale_linetype_manual(values = rep(1:10, times=4)) +
   facet_grid(. ~ treatment, labeller = label_both) +
   theme(legend.position = "none") + 
   scale_y_continuous(limits = c(min(BPRSL$bprs), max(BPRSL$bprs)))
 ```
 
-Linear regression model:
+It looks like in the case of treatment 1, the bprs rating goes down during the treatment for most subjects. Things are a little less clear for the treatment 2 group, and we see that we again have an outlier in the second group.
+
+We will ignore the longitudinal nature of the data for now. We fit a multiple linear regression model, where bprs is the target variable and week + treatment are the explanatory variables. We find the following model:
 
 ```{r}
 BPRS_reg <- lm(bprs ~ week + treatment, data = BPRSL)
